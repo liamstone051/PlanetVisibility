@@ -6,13 +6,10 @@ library(jsonlite)
 library(swephR)
 library(reticulate)
 
-reticulate::py_install("skyfield")
+#reticulate::py_install("skyfield") # Uncomment to install skyfield
 skyfield <- import("skyfield.api")
 
-
 planets <- skyfield$load("de440s.bsp")
-
-
 
 
 dec_form <- function(ra_h, ra_m, ra_s) {
@@ -79,14 +76,39 @@ visibility <- function(which_planet, obs_long, obs_lat) {
   print(altitude * (180/pi))
 }
 
-visibility('mars barycenter', -92.47437, 26.21957)
+#visibility('mars barycenter', -92.47437, 26.21957)
 
+zenith_locater <- function(which_planet) {
+  ts <- skyfield$load$timescale()
+  t <- ts$now()
+  planet <- planets[which_planet]
+  earth <- planets['earth']
+  astrometric <- earth$at(t)$observe(planet)
+  coords <- astrometric$radec()
+  ra_deg <- coords[[1]]
+  dec_deg <- coords[[2]]
+  ra_deg <- ra_deg$hours
+  dec_deg <- dec_deg$degrees
+  
+  greenwich_sidereal_time <- ut2lst(Sys.time(), lon.obs = 0)
+  greenwich_sidereal_time <- format(greenwich_sidereal_time, format="%Y")
+  greenwich_sidereal_time <- as.numeric(greenwich_sidereal_time)
+  gst_deg <- greenwich_sidereal_time
+  
+  calculated_long <- time_to_long(ra_deg, gst_deg)
+  
+  zenith_coords <- c(dec_deg, calculated_long)
+  zenith_coords
+}
 
+center_coords <- zenith_locater('saturn barycenter')
 
-library(globe4r)
-create_globe() %>% 
-  globe_pov(-21, 179) %>% # position camera
-  globe_bars(
-    coords(latitude, longitude), 
-    data = visibility
-  )
+center_coords
+
+#library(globe4r)
+#create_globe() %>% 
+#  globe_pov(-21, 179) %>% # position camera
+#  globe_bars(
+#    coords(latitude, longitude), 
+#    data = visibility
+#  )
