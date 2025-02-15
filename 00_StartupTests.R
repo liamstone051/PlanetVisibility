@@ -100,15 +100,3 @@ zenith_locater <- function(which_planet) {
   zenith_coords <- c(dec_deg, calculated_long)
   zenith_coords
 }
-
-center_coords <- zenith_locater('saturn barycenter')
-
-center_coords
-
-#library(globe4r)
-#create_globe() %>% 
-#  globe_pov(-21, 179) %>% # position camera
-#  globe_bars(
-#    coords(latitude, longitude), 
-#    data = visibility
-#  )
