@@ -4,6 +4,10 @@ import pandas as pd
 from geopy.distance import Geodesic
 import plotly.graph_objects as go
 
+import dash
+from dash import dcc, html, Output, Input
+import plotly.graph_objects as go
+
 import plotly.io as pio
 pio.renderers.default = "browser"
 
@@ -13,11 +17,10 @@ planet_names = [
     "Pluto", "Moon"
 ]
 
-# This dictionary will hold their center coordinates
 planet_centers = {}
 
 for name in planet_names:
-    coords = zenith_locator(globals()[name])  # Get the planet object from its variable name
+    coords = zenith_locator(globals()[name])
     planet_centers[name] = {
         "lat": coords[0],
         "lon": coords[1]
@@ -49,10 +52,8 @@ def create_circle_coords(radius_deg, center_lat, center_lon, num_points=32):
 
     return (lat, lon)
 
-# Degrees you want rings for (outer to inner)
 ring_degrees = [89.99, 80, 70, 60, 50, 40, 30, 20, 10]
 
-# Planet centers
 planet_centers = {
     "Mercury": (planet_centers["Mercury"]["lat"], planet_centers["Mercury"]["lon"]),
     "Venus": (planet_centers["Venus"]["lat"], planet_centers["Venus"]["lon"]),
@@ -65,7 +66,6 @@ planet_centers = {
     "Moon": (planet_centers["Moon"]["lat"], planet_centers["Moon"]["lon"])
 }
 
-# Dictionary to hold results
 planet_rings = {}
 
 for planet, (lat, lon) in planet_centers.items():
@@ -74,7 +74,6 @@ for planet, (lat, lon) in planet_centers.items():
         key = f"{int(deg)}°" if deg != 89.99 else "90°"
         planet_rings[planet][key] = create_circle_coords(deg, lat, lon)
 
-#jupiter_cols = ["#f7d3ca","#f2c9be","#eec0b2","#e9b6a6","#e3ad9b","#dea38f","#d89a83","#d29177","#cc886b"]
 mercury_cols = [
     "#e8e0d8",  # soft warm grey
     "#d8cfc3",  # sandy grey
@@ -97,8 +96,6 @@ venus_cols = [
     "#b85c37",  # warm sienna
     "#9f4a2e"   # deep terracotta
 ]
-
-
 mars_cols = [
     "#f7dad4",  # soft rose pink
     "#f1a69d",  # warm coral red
@@ -178,11 +175,6 @@ moon_cols = [
     "#46474d"   # deep shadow
 ]
 
-import dash
-from dash import dcc, html, Output, Input
-import plotly.graph_objects as go
-
-
 grouped_circles = {
     name: {
         "center": planet_centers[name],
@@ -215,13 +207,13 @@ app.layout = html.Div([
 def update_map(selected_groups):
     fig = go.Figure()
 
+    # Invisibile point to keep the map visible even when nothing is selected
     if not selected_groups:
-        # Add invisible dummy point so map is not empty
         fig.add_trace(go.Scattergeo(
-            lat=[0],  # Arbitrary coords (equator)
+            lat=[0],
             lon=[0],
             mode='markers',
-            marker=dict(size=0.1, color='rgba(0,0,0,0)'),  # Tiny, fully transparent
+            marker=dict(size=0.1, color='rgba(0,0,0,0)'),
             showlegend=False,
             hoverinfo='skip',
             name='dummy'
@@ -246,7 +238,6 @@ def update_map(selected_groups):
             visible_state = True if planet in selected_groups else 'legendonly'
             center_lat, center_lon = data['center']
 
-            # Add center marker
             fig.add_trace(go.Scattergeo(
                 lat=[center_lat],
                 lon=[center_lon],
@@ -255,11 +246,9 @@ def update_map(selected_groups):
                 name=f"{planet} Zenith"
             ))
 
-            # Add rings
             labels = [label for label, _, _ in data['rings']]
 
             for i, label in enumerate(reversed(labels)):
-                # Subtract 10 from the numeric part
                 numeric_value = int(label.strip("°")) - 10
                 new_label = f"{numeric_value}°"
 
