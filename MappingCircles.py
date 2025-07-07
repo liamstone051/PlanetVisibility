@@ -19,6 +19,8 @@ planet_names = [
 
 planet_centers = {}
 
+print(zenith_locator(Jupiter))
+
 for name in planet_names:
     coords = zenith_locator(globals()[name])
     planet_centers[name] = {
@@ -195,10 +197,17 @@ app.layout = html.Div([
         options=[{'label': group, 'value': group} for group in grouped_circles],
         value=["Moon"],
         labelStyle={'display': 'block'},
-        style={"position": "absolute", "top": "10px", "left": "10px", "zIndex": 1000, "background": "white", "padding": "10px"}
+        style={
+            "position": "absolute", "top": "10px", "left": "10px",
+            "zIndex": 999, "background": "white", "padding": "10px"
+        }
     ),
-    dcc.Graph(id='map', style={"height": "100vh", "width": "100vw"})
-], style={"margin": "0", "padding": "0", "overflow": "hidden"})
+    dcc.Graph(
+        id='map',
+        style={"height": "100vh", "width": "100vw"},
+        config={"scrollZoom": True}
+    )
+], style={"margin": 0, "padding": 0, "overflow": "hidden"})
 
 @app.callback(
     Output('map', 'figure'),
@@ -207,7 +216,7 @@ app.layout = html.Div([
 def update_map(selected_groups):
     fig = go.Figure()
 
-    # Invisibile point to keep the map visible even when nothing is selected
+    # If nothing is selected, show a dummy invisible marker to preserve the map
     if not selected_groups:
         fig.add_trace(go.Scattergeo(
             lat=[0],
@@ -219,23 +228,8 @@ def update_map(selected_groups):
             name='dummy'
         ))
 
-        fig.update_layout(
-            showlegend=False,
-            uirevision="map-position",
-            geo=dict(
-                scope='world',
-                showland=True,
-                projection=dict(type='equirectangular'),
-                lataxis=dict(range=[-85, 85]),  # restrict vertical pan range
-                lonaxis=dict(range=[-180, 180]),
-            ),
-            margin=dict(l=0, r=0, t=0, b=0)
-        )
-        return fig
-
     for planet, data in grouped_circles.items():
         if planet in selected_groups:
-            visible_state = True if planet in selected_groups else 'legendonly'
             center_lat, center_lon = data['center']
 
             fig.add_trace(go.Scattergeo(
@@ -263,19 +257,19 @@ def update_map(selected_groups):
                     line=dict(color=color),
                     name=f"{planet} - {new_label}",
                     opacity=0.3,
-                    hoverinfo='skip',
-                    visible=visible_state
+                    hoverinfo='skip'
                 ))
 
     fig.update_layout(
+        uirevision="map-position",  # preserve zoom/pan
         showlegend=False,
-        uirevision="map-position",
         geo=dict(
             scope='world',
             showland=True,
             projection=dict(type='equirectangular'),
-            lataxis=dict(range=[-85, 85]),  # restrict vertical pan range
+            lataxis=dict(range=[-85, 85]),
             lonaxis=dict(range=[-180, 180]),
+            fitbounds="locations"                      # auto-fit data when possible
         ),
         margin=dict(l=0, r=0, t=0, b=0)
     )

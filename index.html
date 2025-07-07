@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OpenLayers Antimeridian Demo</title>
+
+  <!-- OpenLayers CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/ol@7.5.0/dist/ol.css" />
+
+  <style> html,body,#map{margin:0;height:100%} </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- OpenLayers JS (note the /dist/ path) -->
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.5.0/dist/ol.js"></script>
+
+  <script>
+    // Create the map
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([0, 0]),
+        zoom: 2
+      })
+    });
+
+    // Polygon crossing the antimeridian
+    const coords = [
+      [170, 10],
+      [190, 10],    // -170 + 360 = 190
+      [190, -10],
+      [170, -10],
+      [170, 10]
+    ].map(c => ol.proj.fromLonLat(c));
+
+    const polygon = new ol.Feature(
+      new ol.geom.Polygon([coords])
+    );
+
+    const vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({ features: [polygon] }),
+      style: new ol.style.Style({
+        stroke: new ol.style.Stroke({ color: 'blue', width: 2 }),
+        fill:   new ol.style.Fill({   color: 'rgba(0,255,255,0.4)' })
+      })
+    });
+
+    map.addLayer(vectorLayer);
+  </script>
+</body>
+</html>
