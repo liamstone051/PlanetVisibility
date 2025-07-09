@@ -1,13 +1,9 @@
 from ZenithLocator import *
 import numpy as np
-import pandas as pd
 from geopy.distance import Geodesic
 import plotly.graph_objects as go
-
 import dash
 from dash import dcc, html, Output, Input
-import plotly.graph_objects as go
-
 import plotly.io as pio
 pio.renderers.default = "browser"
 
@@ -19,8 +15,7 @@ planet_names = [
 
 planet_centers = {}
 
-print(zenith_locator(Jupiter))
-
+# Getting zenith of each planets from ZenithLocator.py
 for name in planet_names:
     coords = zenith_locator(globals()[name])
     planet_centers[name] = {
@@ -33,14 +28,13 @@ distance_m = earth_radius * (np.pi / 2)
 distance_m_div = distance_m / 9
 bearings_deg = np.linspace(0, 360 - 360 / 720, 720)
 
+# Function to create visibility rings based on visibility range
 def create_circle_coords(radius_deg, center_lat, center_lon, num_points=32):
     circle_points = []
     
     for i in range(num_points):
         bearing = i * (360 / num_points)
-        
         result = Geodesic.WGS84.ArcDirect(center_lat, center_lon, bearing, radius_deg)
-        
         circle_points.append((result['lat2'], result['lon2']))
         
     if circle_points:
@@ -70,112 +64,22 @@ planet_centers = {
 
 planet_rings = {}
 
+# Creating visibility rings
 for planet, (lat, lon) in planet_centers.items():
     planet_rings[planet] = {}
     for deg in ring_degrees:
         key = f"{int(deg)}°" if deg != 89.99 else "90°"
         planet_rings[planet][key] = create_circle_coords(deg, lat, lon)
 
-mercury_cols = [
-    "#e8e0d8",  # soft warm grey
-    "#d8cfc3",  # sandy grey
-    "#c8beb0",  # ash grey
-    "#b8ae9d",  # warm taupe
-    "#a8988a",  # warm mineral
-    "#948374",  # smoky bronze
-    "#7f6d5f",  # deep taupe
-    "#69594c",  # volcanic dust
-    "#53443a"   # metal-stone
-]
-venus_cols = [
-    "#fff8ef",  # creamy ivory
-    "#fde8d6",  # soft warm cream
-    "#facfb9",  # light peach
-    "#f9b999",  # warm apricot
-    "#f5a574",  # richer peach
-    "#e98d5a",  # warm coral
-    "#d57646",  # burnt apricot
-    "#b85c37",  # warm sienna
-    "#9f4a2e"   # deep terracotta
-]
-mars_cols = [
-    "#f7dad4",  # soft rose pink
-    "#f1a69d",  # warm coral red
-    "#e76b61",  # tomato red
-    "#d84d44",  # rusty red
-    "#bf382f",  # deep brick red
-    "#a32f27",  # burnt crimson
-    "#85261d",  # dark rust red
-    "#671b14",  # deep maroon
-    "#4b130d"   # almost black red
-]
-jupiter_cols = [
-    "#f4b08a",  # light warm tan
-    "#e49063",  # soft pumpkin
-    "#d8743d",  # burnt orange
-    "#c55a27",  # deep rust
-    "#aa451f",  # rich sienna
-    "#8e371a",  # dark burnt umber
-    "#712c15",  # deep rust brown
-    "#55200f",  # dark terra cotta
-    "#3a140a"   # almost black rust
-]
-
-saturn_cols = [
-    "#fbeec1",  # soft buttery cream
-    "#fae4a1",  # lighter warm pale yellow (lightened)
-    "#f6d874",  # lighter golden yellow (lightened)
-    "#ebb847",  # lighter rich amber (lightened)
-    "#d9992e",  # warm goldenrod (unchanged)
-    "#d28d26",  # slightly darker bright golden amber
-    "#c97e1f",  # slightly darker glowing amber
-    "#bc7018",  # slightly darker vibrant gold
-    "#ae6010"   # darker sunny golden yellow (darkened)
-]
-uranus_cols = [
-    "#e9fcf9",  # icy white
-    "#c5f2ed",  # pale mint
-    "#a2e8e3",  # soft aqua
-    "#7eddd7",  # seafoam
-    "#5bd2cb",  # turquoise
-    "#45bec2",  # soft teal
-    "#32aab2",  # medium teal
-    "#258e97",  # darker teal
-    "#1a737c"   # deep icy green
-]
-neptune_cols = [
-    "#e2f0ff",  # light icy blue
-    "#badcff",  # sky blue
-    "#91c7ff",  # soft azure
-    "#67b2ff",  # true blue
-    "#499cf0",  # vivid blue
-    "#3b87d9",  # deeper ocean blue
-    "#2d72c2",  # cobalt
-    "#1f5daa",  # indigo blue
-    "#16498f"   # deep sea blue
-]
-pluto_cols = [
-    "#f0f4fb",  # frosty white
-    "#d7dfee",  # icy blue-grey
-    "#c1cade",  # cold haze
-    "#abb5ce",  # muted icy lavender
-    "#969fbe",  # twilight frost
-    "#828aaf",  # cold dusk
-    "#6e769f",  # icy steel
-    "#5a628f",  # deep frost
-    "#464f7f"   # distant cold
-]
-moon_cols = [
-    "#f4f4f4",  # pale moonlight
-    "#dfe0e2",  # moon dust
-    "#c8cad0",  # crater grey
-    "#b2b4ba",  # shadow grey
-    "#9c9ea6",  # neutral grey
-    "#858890",  # moonstone
-    "#6f727a",  # shaded crater
-    "#5a5c63",  # dark regolith
-    "#46474d"   # deep shadow
-]
+mercury_cols = ["#e8e0d8", "#d8cfc3", "#c8beb0", "#b8ae9d", "#a8988a", "#948374", "#7f6d5f", "#69594c", "#53443a"]
+venus_cols   = ["#fff8ef", "#fde8d6", "#facfb9", "#f9b999", "#f5a574", "#e98d5a", "#d57646", "#b85c37", "#9f4a2e"]
+mars_cols    = ["#f7dad4", "#f1a69d", "#e76b61", "#d84d44", "#bf382f", "#a32f27", "#85261d", "#671b14", "#4b130d"]
+jupiter_cols = ["#f4b08a", "#e49063", "#d8743d", "#c55a27", "#aa451f", "#8e371a", "#712c15", "#55200f", "#3a140a"]
+saturn_cols  = ["#fbeec1", "#fae4a1", "#f6d874", "#ebb847", "#d9992e", "#d28d26", "#c97e1f", "#bc7018", "#ae6010"]
+uranus_cols  = ["#e9fcf9", "#c5f2ed", "#a2e8e3", "#7eddd7", "#5bd2cb", "#45bec2", "#32aab2", "#258e97", "#1a737c"]
+neptune_cols = ["#e2f0ff", "#badcff", "#91c7ff", "#67b2ff", "#499cf0", "#3b87d9", "#2d72c2", "#1f5daa", "#16498f"]
+pluto_cols   = ["#f0f4fb", "#d7dfee", "#c1cade", "#abb5ce", "#969fbe", "#828aaf", "#6e769f", "#5a628f", "#464f7f"]
+moon_cols    = ["#f4f4f4", "#dfe0e2", "#c8cad0", "#b2b4ba", "#9c9ea6", "#858890", "#6f727a", "#5a5c63", "#46474d"]
 
 grouped_circles = {
     name: {
@@ -188,26 +92,65 @@ grouped_circles = {
     for name in planet_centers
 }
 
-
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    dcc.Checklist(
-        id='ring-group-toggle',
-        options=[{'label': group, 'value': group} for group in grouped_circles],
-        value=["Moon"],
-        labelStyle={'display': 'block'},
-        style={
-            "position": "absolute", "top": "10px", "left": "10px",
-            "zIndex": 999, "background": "white", "padding": "10px"
-        }
-    ),
+    html.Div([
+        html.H2("Planetary Zenith Rings", style={
+            "margin": "0 0 8px 0",
+            "fontFamily": "Segoe UI",
+            "fontSize": "22px",
+            "color": "#2c3e50"
+        }),
+        html.P("Each ring shows where the planet appears at a specific altitude above the horizon. "
+            "The outermost ring starts at 0° (planet is along the horizon) and each contour represents an additional 10°, up to the center which marks the zenith at 90° (directly overhead).",
+            style={
+                "margin": "0 0 15px 0",
+                "fontFamily": "Segoe UI",
+                "fontSize": "14px",
+                "color": "#555"
+        }),
+        html.H4("Select Planet Rings", style={
+            "margin": "0 0 10px 0",
+            "fontFamily": "Segoe UI",
+            "color": "#2c3e50"
+        }),
+        dcc.Checklist(
+            id='ring-group-toggle',
+            options=[{'label': group, 'value': group} for group in grouped_circles],
+            value=["Moon"],
+            labelStyle={
+                "display": "block",
+                "marginBottom": "6px",
+                "fontFamily": "Segoe UI",
+                "fontSize": "15px",
+                "color": "#34495e"
+            }
+        )
+    ], style={
+        "position": "absolute",
+        "top": "20px",
+        "left": "20px",
+        "zIndex": 999,
+        "maxHeight": "90vh",
+        "overflowY": "auto",
+        "width": "260px",
+        "background": "white",
+        "padding": "20px 12px 20px 20px",
+        "borderRadius": "10px",
+        "boxShadow": "0 4px 16px rgba(0, 0, 0, 0.15)"
+    }),
     dcc.Graph(
         id='map',
         style={"height": "100vh", "width": "100vw"},
         config={"scrollZoom": True}
     )
-], style={"margin": 0, "padding": 0, "overflow": "hidden"})
+], style={
+    "margin": 0,
+    "padding": 0,
+    "overflow": "hidden",
+    "fontFamily": "Segoe UI, Arial, sans-serif"
+})
 
 @app.callback(
     Output('map', 'figure'),
@@ -216,7 +159,7 @@ app.layout = html.Div([
 def update_map(selected_groups):
     fig = go.Figure()
 
-    # If nothing is selected, show a dummy invisible marker to preserve the map
+    # If nothing is selected, show an invisible point to keep the map on screen
     if not selected_groups:
         fig.add_trace(go.Scattergeo(
             lat=[0],
@@ -232,16 +175,21 @@ def update_map(selected_groups):
         if planet in selected_groups:
             center_lat, center_lon = data['center']
 
+            # Adding the center marker for each planet
             fig.add_trace(go.Scattergeo(
                 lat=[center_lat],
                 lon=[center_lon],
                 mode='markers',
-                marker=dict(size=10, color='black'),
+                marker=dict(size=10, 
+                            color='black',
+                            reversescale = True
+                            ),
                 name=f"{planet} Zenith"
             ))
 
             labels = [label for label, _, _ in data['rings']]
 
+            # Adding each visibility rings for the planets
             for i, label in enumerate(reversed(labels)):
                 numeric_value = int(label.strip("°")) - 10
                 new_label = f"{numeric_value}°"
@@ -261,7 +209,7 @@ def update_map(selected_groups):
                 ))
 
     fig.update_layout(
-        uirevision="map-position",  # preserve zoom/pan
+        uirevision="map-position",
         showlegend=False,
         geo=dict(
             scope='world',
@@ -269,12 +217,13 @@ def update_map(selected_groups):
             projection=dict(type='equirectangular'),
             lataxis=dict(range=[-85, 85]),
             lonaxis=dict(range=[-180, 180]),
-            fitbounds="locations"                      # auto-fit data when possible
+            fitbounds="locations"
         ),
         margin=dict(l=0, r=0, t=0, b=0)
     )
 
     return fig
 
+# Running the program
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080)

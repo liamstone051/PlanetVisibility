@@ -17,5 +17,3 @@ def zenith_locator(planet):
     planet_ra = float(testing_planet.ra) * 12 / pi
     calculated_lon = time_to_long(planet_ra, gst)
     return (math.degrees(testing_planet.dec), calculated_lon)
-
-print(zenith_locator(Jupiter))
