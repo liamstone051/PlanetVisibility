@@ -92,7 +92,7 @@ grouped_circles = {
     for name in planet_centers
 }
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, title="Planet Visibility")
 server = app.server
 
 app.layout = html.Div([
