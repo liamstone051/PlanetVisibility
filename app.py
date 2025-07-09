@@ -103,15 +103,18 @@ app.layout = html.Div([
             "fontSize": "22px",
             "color": "#2c3e50"
         }),
-        html.P("Each ring shows where the planet appears at a specific altitude above the horizon. "
-            "The outermost ring starts at 0° (planet is along the horizon) and each contour represents an additional 10°, up to the center which marks the zenith at 90° (directly overhead).",
+        html.P([html.Span("Each ring shows where the planet appears at a specific altitude above the horizon."),
+                html.Br(),
+                html.Span("The outermost ring starts at 0° (planet is along the horizon) and each contour represents an additional 10°, up to the center which marks the zenith at 90° (directly overhead)."),
+                html.Br(),
+                html.Span("Updates every minute.")],
             style={
                 "margin": "0 0 15px 0",
                 "fontFamily": "Segoe UI",
                 "fontSize": "14px",
                 "color": "#555"
         }),
-        html.H4("Select Planet Rings", style={
+        html.H4("Select Visible Planets", style={
             "margin": "0 0 10px 0",
             "fontFamily": "Segoe UI",
             "color": "#2c3e50"
@@ -141,6 +144,11 @@ app.layout = html.Div([
         "borderRadius": "10px",
         "boxShadow": "0 4px 16px rgba(0, 0, 0, 0.15)"
     }),
+    dcc.Interval(
+        id='interval-component',
+        interval=60*1000,  # 60,000 milliseconds = 1 minute
+        n_intervals=0
+    ),
     dcc.Graph(
         id='map',
         style={"height": "100vh", "width": "100vw"},
@@ -155,16 +163,49 @@ app.layout = html.Div([
 
 @app.callback(
     Output('map', 'figure'),
-    Input('ring-group-toggle', 'value')
+    Input('ring-group-toggle', 'value'),
+    Input('interval-component', 'n_intervals')
 )
-def update_map(selected_groups):
+def update_map(selected_groups, n_intervals):
+    # Recalculate planet centers each time
+    planet_centers = {}
+    for name in planet_names:
+        coords = zenith_locator(globals()[name])
+        planet_centers[name] = {
+            "lat": coords[0],
+            "lon": coords[1]
+        }
+
+    # Planet centers for ring creation
+    planet_centers = {
+        name: (planet_centers[name]["lat"], planet_centers[name]["lon"])
+        for name in planet_names
+    }
+
+    # Create planet rings
+    planet_rings = {}
+    for planet, (lat, lon) in planet_centers.items():
+        planet_rings[planet] = {}
+        for deg in ring_degrees:
+            key = f"{int(deg)}°" if deg != 89.99 else "90°"
+            planet_rings[planet][key] = create_circle_coords(deg, lat, lon)
+
+    grouped_circles = {
+        name: {
+            "center": planet_centers[name],
+            "rings": [
+                (label, planet_rings[name][label], globals()[f"{name.lower()}_cols"][i])
+                for i, label in enumerate(planet_rings[name])
+            ]
+        }
+        for name in planet_centers
+    }
+
     fig = go.Figure()
 
-    # If nothing is selected, show an invisible point to keep the map on screen
     if not selected_groups:
         fig.add_trace(go.Scattergeo(
-            lat=[0],
-            lon=[0],
+            lat=[0], lon=[0],
             mode='markers',
             marker=dict(size=0.1, color='rgba(0,0,0,0)'),
             showlegend=False,
@@ -176,21 +217,15 @@ def update_map(selected_groups):
         if planet in selected_groups:
             center_lat, center_lon = data['center']
 
-            # Adding the center marker for each planet
             fig.add_trace(go.Scattergeo(
                 lat=[center_lat],
                 lon=[center_lon],
                 mode='markers',
-                marker=dict(size=10, 
-                            color='black',
-                            reversescale = True
-                            ),
+                marker=dict(size=10, color='black', reversescale=True),
                 name=f"{planet} Zenith"
             ))
 
             labels = [label for label, _, _ in data['rings']]
-
-            # Adding each visibility rings for the planets
             for i, label in enumerate(reversed(labels)):
                 numeric_value = int(label.strip("°")) - 10
                 new_label = f"{numeric_value}°"
